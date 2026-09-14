@@ -2,9 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\UserAccountMail;
+use App\Mail\WelcomeUserMail;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 
 class UserManagementController extends Controller
@@ -27,7 +31,7 @@ class UserManagementController extends Controller
             'can_eliminar' => ['nullable', 'boolean'],
         ]);
 
-        User::create([
+        $usuario = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
@@ -35,6 +39,8 @@ class UserManagementController extends Controller
             'can_editar' => $request->boolean('can_editar'),
             'can_eliminar' => $request->boolean('can_eliminar'),
         ]);
+
+        $this->enviarBienvenida($usuario, $data['password']);
 
         return redirect()
             ->route('usuarios.index')
@@ -52,6 +58,8 @@ class UserManagementController extends Controller
             'can_eliminar' => ['nullable', 'boolean'],
         ]);
 
+        $original = $usuario->only(['name', 'email', 'can_crear', 'can_editar', 'can_eliminar']);
+
         $usuario->name = $data['name'];
         $usuario->email = $data['email'];
 
@@ -61,11 +69,23 @@ class UserManagementController extends Controller
             $usuario->can_eliminar = $request->boolean('can_eliminar');
         }
 
-        if (filled($data['password'] ?? null)) {
+        $passwordCambiada = filled($data['password'] ?? null);
+
+        if ($passwordCambiada) {
             $usuario->password = Hash::make($data['password']);
         }
 
         $usuario->save();
+
+        $cambios = $this->buildCambiosUsuario($original, $usuario->only(['name', 'email', 'can_crear', 'can_editar', 'can_eliminar']));
+
+        if ($passwordCambiada) {
+            $cambios[] = ['label' => 'Contraseña', 'before' => '••••••••', 'after' => 'Actualizada'];
+        }
+
+        if (! empty($cambios)) {
+            $this->notificarUsuario($usuario, 'actualizado', $cambios);
+        }
 
         return redirect()
             ->route('usuarios.index')
@@ -86,10 +106,71 @@ class UserManagementController extends Controller
                 ->with('status', 'No puedes eliminar tu propia cuenta.');
         }
 
+        $snapshot = (object) $usuario->only(['name', 'email']);
+
         $usuario->delete();
+
+        $this->notificarUsuario($snapshot, 'eliminado');
 
         return redirect()
             ->route('usuarios.index')
             ->with('status', 'Usuario eliminado correctamente.');
+    }
+
+    private function buildCambiosUsuario(array $original, array $actual): array
+    {
+        $labels = [
+            'name' => 'Nombre',
+            'email' => 'Correo',
+            'can_crear' => 'Puede crear',
+            'can_editar' => 'Puede editar',
+            'can_eliminar' => 'Puede eliminar',
+        ];
+
+        $boolCampos = ['can_crear', 'can_editar', 'can_eliminar'];
+        $cambios = [];
+
+        foreach ($actual as $campo => $valor) {
+            $antes = $original[$campo] ?? null;
+
+            if ($antes === $valor) {
+                continue;
+            }
+
+            if (in_array($campo, $boolCampos, true)) {
+                $antes = $antes ? 'Sí' : 'No';
+                $valor = $valor ? 'Sí' : 'No';
+            }
+
+            $cambios[] = [
+                'label' => $labels[$campo] ?? ucfirst($campo),
+                'before' => (string) ($antes ?? '—'),
+                'after' => (string) ($valor ?? '—'),
+            ];
+        }
+
+        return $cambios;
+    }
+
+    private function enviarBienvenida(User $usuario, string $passwordPlano): void
+    {
+        try {
+            Mail::to($usuario->email)->send(new WelcomeUserMail($usuario->name, $usuario->email, $passwordPlano));
+        } catch (\Throwable $e) {
+            Log::error('No se pudo enviar el correo de bienvenida al usuario: ' . $e->getMessage());
+        }
+    }
+
+    private function notificarUsuario(object $usuario, string $accion, array $cambios = []): void
+    {
+        if (empty($usuario->email)) {
+            return;
+        }
+
+        try {
+            Mail::to($usuario->email)->send(new UserAccountMail($usuario, $accion, $cambios));
+        } catch (\Throwable $e) {
+            Log::error('No se pudo enviar el correo de notificación de cuenta: ' . $e->getMessage());
+        }
     }
 }

@@ -11,7 +11,7 @@ class ReasignacionController extends Controller
     {
         $search = trim((string) $request->query('search', ''));
 
-        $query = Reasignacion::query();
+        $query = Reasignacion::query()->with('cambiadoPor');
 
         if ($search !== '') {
             $query->where(function ($sub) use ($search) {
@@ -19,12 +19,18 @@ class ReasignacionController extends Controller
                     ->orWhere('equipo_nombre', 'like', "%{$search}%")
                     ->orWhere('asignado_anterior', 'like', "%{$search}%")
                     ->orWhere('asignado_nuevo', 'like', "%{$search}%")
+                    ->orWhere('cambiado_por_nombre', 'like', "%{$search}%")
                     ->orWhere('marca', 'like', "%{$search}%")
                     ->orWhere('modelo', 'like', "%{$search}%");
             });
         }
 
         $reasignaciones = $query->orderByDesc('fecha_reasignacion')->paginate(20)->withQueryString();
+        $ultimasReasignaciones = Reasignacion::query()
+            ->with('cambiadoPor')
+            ->orderByDesc('fecha_reasignacion')
+            ->limit(5)
+            ->get();
 
         $totalReasignaciones = Reasignacion::count();
         $ultimaReasignacion = Reasignacion::orderByDesc('fecha_reasignacion')->first();
@@ -32,6 +38,7 @@ class ReasignacionController extends Controller
 
         return view('reasignaciones.index', compact(
             'reasignaciones',
+            'ultimasReasignaciones',
             'totalReasignaciones',
             'ultimaReasignacion',
             'equiposReasignados'

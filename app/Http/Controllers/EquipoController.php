@@ -2,13 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\EquiposExport;
 use App\Mail\EquipoNotificationMail;
 use App\Models\Equipo;
 use App\Models\NotificationEmail;
 use App\Models\Reasignacion;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\Rule;
+use Maatwebsite\Excel\Facades\Excel;
 
 class EquipoController extends Controller
 {
@@ -59,6 +63,8 @@ class EquipoController extends Controller
                 'equipo_reasignado_nuevo' => $equipo->equipo_reasignado_a,
                 'ubicacion' => $equipo->ubicacion,
                 'fecha_reasignacion' => now(),
+                'cambiado_por_user_id' => $request->user()?->id,
+                'cambiado_por_nombre' => $request->user()?->name ?? 'Sistema',
             ]);
         }
 
@@ -88,6 +94,15 @@ class EquipoController extends Controller
         $search = trim((string) $request->query('search', ''));
         $estado = $request->query('estado', '');
         $tipo = $request->query('tipo', '');
+        $ordenarPor = $request->query('ordenar_por', 'codigo');
+        $ordenDireccion = $request->query('orden_direccion', 'asc');
+        $columnasOrdenables = [
+            'ubicacion' => 'ubicacion',
+            'estado' => 'estado',
+            'codigo' => 'codigo_inventario',
+        ];
+        $ordenarPor = array_key_exists($ordenarPor, $columnasOrdenables) ? $ordenarPor : 'codigo';
+        $ordenDireccion = $ordenDireccion === 'desc' ? 'desc' : 'asc';
 
         $tiposDisponibles = Equipo::query()
             ->select('tipo')
@@ -95,6 +110,95 @@ class EquipoController extends Controller
             ->distinct()
             ->orderBy('tipo')
             ->pluck('tipo');
+
+        $equipos = $this->buildFilteredQuery($request)
+            ->orderBy($columnasOrdenables[$ordenarPor], $ordenDireccion)
+            ->orderBy('codigo_inventario')
+            ->get();
+
+        $metrics = $this->computeMetrics($equipos);
+
+        $totalEquipos = $metrics['total'];
+        $excelentes = $metrics['excelentes'];
+        $buenos = $metrics['buenos'];
+        $revision = $metrics['revision'];
+        $telefonos = $metrics['telefonos'];
+        $computadores = $metrics['computadores'];
+        $valorTotal = $metrics['valor_total'];
+        $valorActual = $metrics['valor_actual'];
+        $tiposData = $metrics['tipos'];
+
+        $nextCodigoComputador = $this->generateCodigoInventario('Computador');
+        $nextCodigoTelefono = $this->generateCodigoInventario('Telefono');
+        $notificationEmails = NotificationEmail::orderBy('email')->get();
+        $specOptions = $this->getSpecOptions();
+        $assetVersion = time();
+        $exportColumns = self::exportableColumns();
+
+        return view('equipos.index', compact(
+            'equipos',
+            'totalEquipos',
+            'excelentes',
+            'buenos',
+            'revision',
+            'telefonos',
+            'computadores',
+            'valorTotal',
+            'valorActual',
+            'tiposData',
+            'nextCodigoComputador',
+            'nextCodigoTelefono',
+            'notificationEmails',
+            'specOptions',
+            'assetVersion',
+            'exportColumns',
+            'ordenarPor',
+            'ordenDireccion'
+        ))->with([
+            'search' => $search,
+            'estadoSeleccionado' => $estado,
+            'tipoSeleccionado' => $tipo,
+            'tiposDisponibles' => $tiposDisponibles,
+        ]);
+    }
+
+    /**
+     * Métricas del dashboard en JSON, respetando los mismos filtros que index(), para el polling en tiempo real.
+     */
+    public function metrics(Request $request)
+    {
+        $equipos = $this->buildFilteredQuery($request)->get();
+
+        return response()->json($this->computeMetrics($equipos));
+    }
+
+    public function export(Request $request)
+    {
+        $available = array_keys(self::exportableColumns());
+        $requested = array_filter((array) $request->query('columns', $available));
+        $columns = array_values(array_intersect($available, $requested));
+
+        if (empty($columns)) {
+            $columns = $available;
+        }
+
+        $scope = $request->query('scope') === 'all' ? 'all' : 'filtered';
+        $sortBy = in_array($request->query('sort_by'), $available, true) ? $request->query('sort_by') : 'codigo_inventario';
+        $sortDir = $request->query('sort_dir') === 'desc' ? 'desc' : 'asc';
+
+        $query = $scope === 'all' ? Equipo::query() : $this->buildFilteredQuery($request);
+
+        return Excel::download(
+            new EquiposExport($query, $columns, self::exportableColumns(), $sortBy, $sortDir),
+            'inventario-equipos-' . now()->format('Y-m-d_His') . '.xlsx'
+        );
+    }
+
+    private function buildFilteredQuery(Request $request): Builder
+    {
+        $search = trim((string) $request->query('search', ''));
+        $estado = $request->query('estado', '');
+        $tipo = $request->query('tipo', '');
 
         $query = Equipo::query();
 
@@ -117,52 +221,73 @@ class EquipoController extends Controller
             $query->where('tipo', $tipo);
         }
 
-        // Orden principal por nombre asignado para que el listado sea más útil.
-        $equipos = $query
-            ->orderByRaw("COALESCE(NULLIF(nombre, ''), NULLIF(asignado_a, ''), codigo_inventario) asc")
-            ->orderBy('codigo_inventario')
-            ->get();
+        return $query;
+    }
 
-        // Conteos para las tarjetas del Dashboard
-        $totalEquipos = $equipos->count();
-        $excelentes = $equipos->where('estado', 'Excelente')->count();
-        $buenos = $equipos->where('estado', 'Bueno')->count();
-        $revision = $equipos->whereIn('estado', ['Regular', 'Malo', 'De Baja'])->count();
-        $telefonos = $equipos->where('categoria', 'Telefonos')->count();
-        $computadores = $equipos->where('categoria', 'Equipos')->count();
-        $valorTotal = (float) $equipos->sum('valoracion_equipo_actual_numero');
+    private function computeMetrics($equipos): array
+    {
+        return [
+            'total' => $equipos->count(),
+            'excelentes' => $equipos->where('estado', 'Excelente')->count(),
+            'buenos' => $equipos->where('estado', 'Bueno')->count(),
+            'revision' => $equipos->whereIn('estado', ['Regular', 'Malo', 'De Baja'])->count(),
+            'telefonos' => $equipos->where('categoria', 'Telefonos')->count(),
+            'computadores' => $equipos->where('categoria', 'Equipos')->count(),
+            'valor_total' => (float) $equipos->sum(fn ($equipo) => $this->normalizeMoneyToNumber($equipo->valoracion_equipo) ?? 0),
+            'valor_actual' => (float) $equipos->sum(fn ($equipo) => (float) ($equipo->valoracion_equipo_actual_numero ?? 0)),
+            'tipos' => $equipos->groupBy('tipo')->map->count(),
+            'actualizado' => now()->format('d/m/Y H:i:s'),
+        ];
+    }
 
-        // Datos agrupados por tipo para gráficos JavaScript (Chart.js)
-        $tiposData = $equipos->groupBy('tipo')->map->count();
-        $nextCodigoComputador = $this->generateCodigoInventario('Computador');
-        $nextCodigoTelefono = $this->generateCodigoInventario('Telefono');
-        $notificationEmails = NotificationEmail::orderBy('email')->get();
-        $specOptions = $this->getSpecOptions();
-
-        return view('equipos.index', compact(
-            'equipos',
-            'totalEquipos',
-            'excelentes',
-            'buenos',
-            'revision',
-            'telefonos',
-            'computadores',
-            'valorTotal',
-            'tiposData',
-            'nextCodigoComputador',
-            'nextCodigoTelefono',
-            'notificationEmails',
-            'specOptions'
-        ))->with([
-            'search' => $search,
-            'estadoSeleccionado' => $estado,
-            'tipoSeleccionado' => $tipo,
-            'tiposDisponibles' => $tiposDisponibles,
-        ]);
+    public static function exportableColumns(): array
+    {
+        return [
+            'codigo_inventario' => 'Código',
+            'nombre' => 'Nombre',
+            'asignado_a' => 'Asignado a',
+            'categoria' => 'Categoría',
+            'tipo' => 'Tipo',
+            'marca' => 'Marca',
+            'modelo' => 'Modelo',
+            'numero_serie' => 'Nº Serie',
+            'usuario_pc' => 'Usuario PC',
+            'procesador' => 'Procesador',
+            'tipo_disco_duro' => 'Tipo disco duro',
+            'ram_instalada' => 'RAM instalada',
+            'pantalla_externa' => 'Pantalla externa',
+            'marca_monitor' => 'Marca monitor',
+            'modelo_monitor' => 'Modelo monitor',
+            'numero_serie_monitor' => 'Nº Serie monitor',
+            'marca_monitor2' => 'Marca monitor 2',
+            'modelo_monitor2' => 'Modelo monitor 2',
+            'numero_serie_monitor2' => 'Nº Serie monitor 2',
+            'teclado' => 'Teclado',
+            'mouse' => 'Mouse',
+            'base_notebook' => 'Base notebook',
+            'onedrive_funcionando' => 'OneDrive funciona',
+            'respaldo_onedrive' => 'Respaldo OneDrive',
+            'equipo_reasignado_a' => 'Reasignado a',
+            'valoracion_equipo' => 'Valoración equipo',
+            'valoracion_monitor' => 'Valoración monitor',
+            'valoracion_equipo_actual' => 'Valor actual',
+            'estado' => 'Estado',
+            'ubicacion' => 'Ubicación',
+            'mantencion_realizada' => 'Mantención realizada',
+            'observaciones' => 'Observaciones',
+            'created_at' => 'Fecha de creación',
+            'updated_at' => 'Última actualización',
+        ];
     }
 
     private function validateEquipo(Request $request, ?int $equipoId = null): array
     {
+        if ($request->has('pantalla_externa')) {
+            $request->merge([
+                'pantalla_externa' => $this->normalizePantallaExterna($request->input('pantalla_externa')),
+            ]);
+        }
+
         return $request->validate([
             'nombre' => ['nullable', 'string', 'max:255'],
             'asignado_a' => ['nullable', 'string', 'max:255'],
@@ -174,10 +299,13 @@ class EquipoController extends Controller
             'procesador' => ['nullable', 'string', 'max:255'],
             'tipo_disco_duro' => ['nullable', 'string', 'max:255'],
             'ram_instalada' => ['nullable', 'string', 'max:255'],
-            'pantalla_externa' => ['nullable', 'in:SI,NO'],
+            'pantalla_externa' => ['nullable', Rule::in(['SI', 'SI2', 'NO'])],
             'marca_monitor' => ['nullable', 'string', 'max:255'],
             'modelo_monitor' => ['nullable', 'string', 'max:255'],
             'numero_serie_monitor' => ['nullable', 'string', 'max:255'],
+            'marca_monitor2' => ['nullable', 'string', 'max:255'],
+            'modelo_monitor2' => ['nullable', 'string', 'max:255'],
+            'numero_serie_monitor2' => ['nullable', 'string', 'max:255'],
             'teclado' => ['nullable', 'in:SI,NO'],
             'mouse' => ['nullable', 'in:SI,NO'],
             'base_notebook' => ['nullable', 'in:SI,NO'],
@@ -192,6 +320,22 @@ class EquipoController extends Controller
             'mantencion_realizada' => ['nullable', 'in:SI,NO'],
             'observaciones' => ['nullable', 'string'],
         ]);
+    }
+
+    private function normalizePantallaExterna(?string $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $normalized = strtoupper(trim((string) $value));
+        $normalized = str_replace(' ', '', $normalized);
+
+        if ($normalized === 'SI,2' || $normalized === 'SI2') {
+            return 'SI2';
+        }
+
+        return in_array($normalized, ['SI', 'NO'], true) ? $normalized : null;
     }
 
     private function fillEquipo(Equipo $equipo, array $data, bool $isNew): void
@@ -211,6 +355,12 @@ class EquipoController extends Controller
             $nombre = $asignado;
         }
 
+        $reasignadoA = trim((string) ($data['equipo_reasignado_a'] ?? ''));
+
+        if ($reasignadoA === '' && $asignado !== '') {
+            $reasignadoA = $asignado;
+        }
+
         $equipo->categoria = $data['tipo'] === 'Telefono' ? 'Telefonos' : 'Equipos';
         $equipo->nombre = $nombre !== '' ? $nombre : null;
         $equipo->asignado_a = $asignado !== '' ? $asignado : null;
@@ -226,12 +376,15 @@ class EquipoController extends Controller
         $equipo->marca_monitor = $data['marca_monitor'] ?? null;
         $equipo->modelo_monitor = $data['modelo_monitor'] ?? null;
         $equipo->numero_serie_monitor = $data['numero_serie_monitor'] ?? null;
+        $equipo->marca_monitor2 = $data['marca_monitor2'] ?? null;
+        $equipo->modelo_monitor2 = $data['modelo_monitor2'] ?? null;
+        $equipo->numero_serie_monitor2 = $data['numero_serie_monitor2'] ?? null;
         $equipo->teclado = $data['teclado'] ?? null;
         $equipo->mouse = $data['mouse'] ?? null;
         $equipo->base_notebook = $data['base_notebook'] ?? null;
         $equipo->onedrive_funcionando = $data['onedrive_funcionando'] ?? null;
         $equipo->respaldo_onedrive = $data['respaldo_onedrive'] ?? null;
-        $equipo->equipo_reasignado_a = $data['equipo_reasignado_a'] ?? null;
+        $equipo->equipo_reasignado_a = $reasignadoA !== '' ? $reasignadoA : null;
         $equipo->valoracion_equipo = $data['valoracion_equipo'] ?? null;
         $equipo->valoracion_monitor = $data['valoracion_monitor'] ?? null;
         $equipo->valoracion_equipo_actual = $data['valoracion_equipo_actual'] ?? null;
@@ -276,12 +429,6 @@ class EquipoController extends Controller
         return $numeric === '' ? null : (float) $numeric;
     }
 
-    /**
-     * Obtiene los valores distintos ya registrados en la BDD para poblar los
-     * selects de especificaciones (con opción de agregar uno nuevo con "Otro").
-     *
-     * @return array<string, array<int, string>>
-     */
     private function getSpecOptions(): array
     {
         $campos = ['marca', 'modelo', 'procesador', 'tipo_disco_duro', 'ram_instalada'];
@@ -304,12 +451,10 @@ class EquipoController extends Controller
 
     private function esReasignacion(array $cambios): bool
     {
-        return array_key_exists('asignado_a', $cambios) || array_key_exists('equipo_reasignado_a', $cambios);
+        return array_key_exists('equipo_reasignado_a', $cambios)
+            || array_key_exists('asignado_a', $cambios);
     }
 
-    /**
-     * @return array<int, array{label: string, before: string, after: string}>
-     */
     private function buildCambios(array $original, array $cambios): array
     {
         $labels = [
@@ -327,6 +472,9 @@ class EquipoController extends Controller
             'marca_monitor' => 'Marca monitor',
             'modelo_monitor' => 'Modelo monitor',
             'numero_serie_monitor' => 'Nº Serie monitor',
+            'marca_monitor2' => 'Marca monitor 2',
+            'modelo_monitor2' => 'Modelo monitor 2',
+            'numero_serie_monitor2' => 'Nº Serie monitor 2',
             'teclado' => 'Teclado',
             'mouse' => 'Mouse',
             'base_notebook' => 'Base notebook',
@@ -361,43 +509,25 @@ class EquipoController extends Controller
         return $resultado;
     }
 
-    /**
-     * Obtiene la lista de correos a notificar según lo marcado en el formulario
-     * (checkboxes "notificar_a[]"), y agrega/crea un nuevo destinatario si el
-     * usuario completó los campos "nuevo_destinatario_email" / "..._descripcion".
-     *
-     * @return array<int, string>
-     */
     private function resolveDestinatariosSeleccionados(Request $request): array
     {
         $seleccionados = array_values(array_filter((array) $request->input('notificar_a', [])));
-
-        $nuevoEmail = trim((string) $request->input('nuevo_destinatario_email', ''));
-
-        if ($nuevoEmail !== '') {
-            $request->validate([
-                'nuevo_destinatario_email' => ['email', 'max:255'],
-                'nuevo_destinatario_descripcion' => ['nullable', 'string', 'max:255'],
-            ]);
-
-            NotificationEmail::firstOrCreate(
-                ['email' => $nuevoEmail],
-                ['descripcion' => $request->input('nuevo_destinatario_descripcion') ?: null]
-            );
-
-            $seleccionados[] = $nuevoEmail;
-        }
 
         return array_values(array_unique(array_filter($seleccionados)));
     }
 
     private function notificar(Equipo $equipo, string $accion, array $cambios = [], ?array $destinatarios = null): void
     {
-        if ($destinatarios === null) {
+        if (empty($destinatarios)) {
             $destinatarios = NotificationEmail::pluck('email')->all();
 
             if (empty($destinatarios)) {
                 $destinatarios = config('equipos.notification_emails', []);
+
+                if (empty($destinatarios)) {
+                    $envEmails = env('EQUIPO_NOTIFICATION_EMAILS', 'fgonzalez@pcgeek.cl,vvegas@pcgeek.cl');
+                    $destinatarios = array_filter(array_map('trim', explode(',', $envEmails)));
+                }
             }
         }
 
@@ -405,14 +535,10 @@ class EquipoController extends Controller
             return;
         }
 
-        // Se envía un snapshot (copia) de los datos, no el modelo Eloquent vivo:
-        // el correo se procesa de forma asíncrona en la cola, y para la acción
-        // "eliminado" el registro ya no existiría en la base de datos cuando
-        // el worker intente procesarlo.
         $snapshot = (object) $equipo->toArray();
 
         try {
-            Mail::to($destinatarios)->queue(new EquipoNotificationMail($snapshot, $accion, $cambios));
+            Mail::to($destinatarios)->send(new EquipoNotificationMail($snapshot, $accion, $cambios));
         } catch (\Throwable $e) {
             Log::error('No se pudo enviar el correo de notificación de equipo: ' . $e->getMessage());
         }

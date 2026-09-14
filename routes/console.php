@@ -50,7 +50,11 @@ Artisan::command('equipos:import {path? : Ruta al CSV exportado desde Excel}', f
             return null;
         }
 
-        return in_array($value, ['si', 'sí', 's', 'si,2', 'true', '1', 'yes'], true) ? 'SI' : 'NO';
+        if (in_array($value, ['si,2', 'si2', 'si, 2'], true)) {
+            return 'SI2';
+        }
+
+        return in_array($value, ['si', 'sí', 's', 'true', '1', 'yes'], true) ? 'SI' : 'NO';
     };
 
     $parseCurrency = function ($value) use ($clean): ?string {

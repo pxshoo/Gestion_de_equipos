@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Equipo extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'categoria',
         'codigo_inventario',
@@ -22,6 +25,9 @@ class Equipo extends Model
         'marca_monitor',
         'modelo_monitor',
         'numero_serie_monitor',
+        'marca_monitor2',
+        'modelo_monitor2',
+        'numero_serie_monitor2',
         'teclado',
         'mouse',
         'base_notebook',

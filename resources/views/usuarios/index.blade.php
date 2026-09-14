@@ -4,13 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Administración de accesos - Inventario TI</title>
+    <link rel="icon" type="image/svg+xml" href="{{ asset('images/favicon.svg?v=2') }}">
+    <link rel="alternate icon" href="{{ asset('favicon.ico') }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{{ asset('vendor/bootstrap-icons/bootstrap-icons.min.css') }}" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     @php
-        $assetVersion = '7';
+        $assetVersion = '10';
     @endphp
     <link rel="stylesheet" href="{{ asset('css/dashboard.css?v=' . $assetVersion) }}">
     <style>
@@ -34,13 +37,21 @@
                 </div>
                 <div class="d-flex flex-wrap align-items-center gap-2">
                     <nav class="top-nav-links">
-                        <a href="{{ route('dashboard') }}" class="top-nav-link">📊 Dashboard</a>
-                        <a href="{{ route('reasignaciones.index') }}" class="top-nav-link">🔁 Reasignaciones</a>
-                        <a href="{{ route('usuarios.index') }}" class="top-nav-link active">🔐 Accesos</a>
+                        <a href="{{ route('dashboard') }}" class="top-nav-link"><i class="bi bi-speedometer2"></i> Dashboard</a>
+                        <a href="{{ route('reasignaciones.index') }}" class="top-nav-link"><i class="bi bi-arrow-repeat"></i> Reasignaciones</a>
+                        <a href="{{ route('usuarios.index') }}" class="top-nav-link active"><i class="bi bi-shield-lock"></i> Accesos</a>
                     </nav>
+                    <button type="button" class="theme-toggle" id="themeToggle" aria-label="Cambiar tema" aria-pressed="false">
+                        <span class="toggle-track">
+                            <span class="toggle-thumb">
+                                <i class="bi bi-sun-fill sun-icon"></i>
+                                <i class="bi bi-moon-fill moon-icon"></i>
+                            </span>
+                        </span>
+                    </button>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
-                        <button type="submit" class="btn btn-outline-danger btn-sm">⏻ Cerrar sesión</button>
+                        <button type="submit" class="btn btn-outline-danger btn-sm"><i class="bi bi-power"></i> Cerrar sesión</button>
                     </form>
                 </div>
             </div>
@@ -164,6 +175,36 @@
     </div>
 
     <script>
+        const themeToggle = document.getElementById('themeToggle');
+        const themeStorageKey = 'inventario-theme';
+
+        const applyTheme = (theme) => {
+            const isDark = theme === 'dark';
+            document.body.classList.toggle('theme-dark', isDark);
+            if (themeToggle) {
+                themeToggle.setAttribute('aria-pressed', String(isDark));
+            }
+        };
+
+        try {
+            const savedTheme = localStorage.getItem(themeStorageKey) || 'light';
+            applyTheme(savedTheme);
+        } catch (error) {
+            applyTheme('light');
+        }
+
+        if (themeToggle) {
+            themeToggle.addEventListener('click', () => {
+                const isDark = !document.body.classList.contains('theme-dark');
+                applyTheme(isDark ? 'dark' : 'light');
+                try {
+                    localStorage.setItem(themeStorageKey, isDark ? 'dark' : 'light');
+                } catch (error) {
+                    // Ignorar bloqueo del navegador.
+                }
+            });
+        }
+
         const usuarioForm = document.getElementById('usuarioForm');
         const usuarioFormTitle = document.getElementById('usuarioFormTitle');
         const usuarioMethodField = document.getElementById('usuarioMethodField');

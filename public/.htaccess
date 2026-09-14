@@ -1,3 +1,8 @@
+<IfModule mime_module>
+    # Fuerza el handler de PHP 8.2 de EasyApache (cPanel) para este dominio.
+    AddHandler application/x-httpd-ea-php82 .php
+</IfModule>
+
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes

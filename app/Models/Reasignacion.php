@@ -24,6 +24,8 @@ class Reasignacion extends Model
         'equipo_reasignado_nuevo',
         'ubicacion',
         'fecha_reasignacion',
+        'cambiado_por_user_id',
+        'cambiado_por_nombre',
     ];
 
     protected $casts = [
@@ -33,5 +35,10 @@ class Reasignacion extends Model
     public function equipo()
     {
         return $this->belongsTo(Equipo::class);
+    }
+
+    public function cambiadoPor()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'cambiado_por_user_id');
     }
 }

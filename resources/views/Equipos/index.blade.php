@@ -4,17 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inventario TI - Gestión de Equipos</title>
+    <link rel="icon" type="image/svg+xml" href="{{ asset('images/favicon.svg?v=2') }}">
+    <link rel="alternate icon" href="{{ asset('favicon.ico') }}">
+    @php
+        $assetVersion = '10';
+    @endphp
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{{ asset('vendor/bootstrap-icons/bootstrap-icons.min.css') }}" rel="stylesheet">
+    <link rel="stylesheet" href="{{ asset('css/dashboard.css?v=' . $assetVersion) }}">
     <!-- Chart.js para Gráficos -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    @php
-        $assetVersion = '7';
-    @endphp
+    <!-- Gridstack: layout de widgets arrastrables/redimensionables para el panel personalizable -->
+    <link href="https://cdn.jsdelivr.net/npm/gridstack@10.1.2/dist/gridstack.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/gridstack@10.1.2/dist/gridstack-all.js"></script>
     <style>
         :root {
             --bg: #eef6f5;
@@ -537,6 +544,87 @@
             box-shadow: 0 8px 20px rgba(14, 111, 106, 0.28);
         }
 
+        .grid-stack {
+            background: transparent;
+        }
+
+        .grid-stack-item-content {
+            border-radius: 1.1rem;
+            overflow: hidden;
+            box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+        }
+
+        .widget-card {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            padding: 1rem 1.1rem;
+            color: #fff;
+            position: relative;
+        }
+
+        .widget-card .widget-remove {
+            position: absolute;
+            top: .5rem;
+            right: .5rem;
+            border: 0;
+            background: rgba(255, 255, 255, 0.18);
+            color: #fff;
+            width: 1.6rem;
+            height: 1.6rem;
+            border-radius: 999px;
+            font-size: .75rem;
+            line-height: 1;
+            display: grid;
+            place-items: center;
+            opacity: 0;
+            transition: opacity .15s ease, background .15s ease;
+        }
+
+        .grid-stack-item-content:hover .widget-remove {
+            opacity: 1;
+        }
+
+        .widget-card .widget-remove:hover {
+            background: rgba(255, 255, 255, 0.32);
+        }
+
+        .widget-card.widget-light {
+            color: var(--ink);
+            background: var(--surface-strong) !important;
+            border: 1px solid var(--panel-border);
+        }
+
+        .widget-card .widget-label {
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            font-size: .7rem;
+            opacity: .9;
+        }
+
+        .widget-card .widget-value {
+            font-size: clamp(1.3rem, 1.6vw + 1rem, 1.9rem);
+            font-weight: 800;
+            line-height: 1.15;
+            margin-top: .35rem;
+        }
+
+        .widget-card .widget-footnote {
+            font-size: .78rem;
+            opacity: .9;
+            margin-top: auto;
+            padding-top: .5rem;
+        }
+
+        .widget-catalog-item {
+            border: 1px solid var(--panel-border);
+            border-radius: 1rem;
+            padding: .75rem .9rem;
+            display: flex;
+            align-items: flex-start;
+            gap: .6rem;
+        }
+
 
 
         @media (max-width: 768px) {
@@ -564,6 +652,369 @@
                 padding: .4rem .75rem;
                 font-size: .8rem;
             }
+        }
+
+        @media (max-width: 576px) {
+            .app-shell {
+                padding-left: .6rem !important;
+                padding-right: .6rem !important;
+            }
+
+            .topbar {
+                padding: .75rem !important;
+            }
+
+            .brand-mark {
+                width: clamp(120px, 38vw, 170px);
+            }
+
+            .topbar-subtitle {
+                font-size: .78rem;
+            }
+
+            .top-nav-links {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .top-nav-link {
+                flex: 1 1 0;
+                text-align: center;
+                padding: .5rem .35rem;
+                font-size: .75rem;
+            }
+
+            .hero {
+                border-radius: 1.1rem !important;
+            }
+
+            .hero .card-body {
+                padding: 1.1rem !important;
+            }
+
+            .hero h1 {
+                font-size: 1.4rem;
+            }
+
+            .hero-kpi {
+                min-width: calc(50% - .4rem);
+                flex: 1 1 calc(50% - .4rem);
+            }
+
+            .stat-card,
+            .widget-card {
+                min-height: 100px;
+            }
+
+            .widget-card .widget-value {
+                font-size: 1.35rem;
+            }
+
+            .section-chip {
+                font-size: .75rem;
+            }
+
+            .table thead th,
+            .table tbody td {
+                font-size: .78rem;
+            }
+
+            .table-card .table > :not(caption) > * > * {
+                padding-top: .6rem;
+                padding-bottom: .6rem;
+            }
+
+            .detail-item {
+                padding: .65rem .8rem;
+            }
+
+            .grid-stack-item-content {
+                position: relative !important;
+            }
+        }
+
+        body {
+            background: var(--surface-soft, #f4f7fb);
+            color: var(--text-color, #101827);
+            transition: background-color 0.35s ease, color 0.35s ease;
+        }
+
+        body.theme-dark {
+            --bg: #020817;
+            --surface-soft: #0f172a;
+            --surface: rgba(15, 23, 42, 0.92);
+            --surface-strong: #111827;
+            --panel-border: rgba(148, 163, 184, 0.2);
+            --ink: #f8fafc;
+            --muted: #dfeafc;
+            --brand: #2dd4bf;
+            --brand-dark: #5eead4;
+            --accent: #67e8f9;
+            --accent-soft: rgba(45, 212, 191, 0.12);
+            --text-color: #f8fafc;
+            --text-muted: #dfeafc;
+            --border-color: rgba(148, 163, 184, 0.2);
+            --primary-soft: rgba(96, 165, 250, 0.15);
+            --shadow-color: rgba(2, 6, 23, 0.45);
+            --bs-body-bg: #0f172a;
+            --bs-body-color: #f8fafc;
+            --bs-secondary-color: #dfeafc;
+            --bs-secondary-color-rgb: 223, 234, 252;
+            --bs-tertiary-color: rgba(223, 234, 252, 0.7);
+            --bs-body-color-rgb: 248, 250, 252;
+            background:
+                radial-gradient(circle at top left, rgba(45, 212, 191, 0.12), transparent 26%),
+                radial-gradient(circle at top right, rgba(103, 232, 249, 0.08), transparent 24%),
+                linear-gradient(180deg, #020817 0%, #0f172a 100%);
+            color: var(--ink);
+        }
+
+        body.theme-dark::before {
+            opacity: 0.2;
+        }
+
+        body.theme-dark::after {
+            background:
+                radial-gradient(circle at 18% 14%, rgba(45, 212, 191, 0.12), transparent 18%),
+                radial-gradient(circle at 82% 78%, rgba(103, 232, 249, 0.08), transparent 20%),
+                linear-gradient(180deg, #020817 0%, #0f172a 100%);
+        }
+
+        body.theme-dark .topbar,
+        body.theme-dark .soft-card,
+        body.theme-dark .table-card,
+        body.theme-dark .chart-card,
+        body.theme-dark .filter-panel,
+        body.theme-dark .detail-item,
+        body.theme-dark .widget-card.widget-light,
+        body.theme-dark .section-chip,
+        body.theme-dark .notify-banner,
+        body.theme-dark .top-nav-links,
+        body.theme-dark .card,
+        body.theme-dark .modal-content,
+        body.theme-dark .dropdown-menu {
+            background: rgba(15, 23, 42, 0.92);
+            border-color: var(--panel-border);
+            box-shadow: 0 12px 32px rgba(2, 6, 23, 0.3);
+            color: var(--ink);
+        }
+
+        body.theme-dark .card {
+            background: rgba(15, 23, 42, 0.88);
+        }
+
+        body.theme-dark .topbar {
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.94), rgba(17, 24, 39, 0.96));
+        }
+
+        body.theme-dark .table thead th,
+        body.theme-dark .detail-label,
+        body.theme-dark .subtle-label,
+        body.theme-dark .topbar-subtitle,
+        body.theme-dark .top-nav-link,
+        body.theme-dark .muted,
+        body.theme-dark .widget-card .widget-footnote,
+        body.theme-dark .metric-footnote,
+        body.theme-dark .text-muted,
+        body.theme-dark .small,
+        body.theme-dark .form-text,
+        body.theme-dark .modal-header .btn-close {
+            color: var(--muted);
+        }
+
+        body.theme-dark .table tbody td,
+        body.theme-dark .table tbody th,
+        body.theme-dark .table thead th,
+        body.theme-dark .detail-value,
+        body.theme-dark .filter-panel label,
+        body.theme-dark .card-title,
+        body.theme-dark .card-subtitle,
+        body.theme-dark h1,
+        body.theme-dark h2,
+        body.theme-dark h3,
+        body.theme-dark h4,
+        body.theme-dark h5,
+        body.theme-dark h6,
+        body.theme-dark p,
+        body.theme-dark span,
+        body.theme-dark .btn,
+        body.theme-dark .form-control,
+        body.theme-dark .form-select,
+        body.theme-dark .form-label,
+        body.theme-dark .modal-title,
+        body.theme-dark .modal-body,
+        body.theme-dark .nav-link {
+            color: var(--ink);
+        }
+
+        body.theme-dark .table thead {
+            background: rgba(30, 41, 59, 0.9);
+        }
+
+        body.theme-dark .table tbody tr:hover {
+            background: rgba(96, 165, 250, 0.08);
+        }
+
+        body.theme-dark .form-control,
+        body.theme-dark .form-select,
+        body.theme-dark .form-check-input,
+        body.theme-dark .btn-outline-primary,
+        body.theme-dark .btn-outline-secondary,
+        body.theme-dark .btn-outline-danger,
+        body.theme-dark .btn-light,
+        body.theme-dark .btn-primary,
+        body.theme-dark .btn-secondary {
+            background: rgba(15, 23, 42, 0.85);
+            border-color: var(--panel-border);
+            color: var(--ink);
+        }
+
+        body.theme-dark .btn-primary {
+            background: linear-gradient(135deg, var(--brand), var(--accent));
+            color: #06212a;
+            border-color: transparent;
+        }
+
+        body.theme-dark .btn-outline-primary,
+        body.theme-dark .btn-outline-secondary,
+        body.theme-dark .btn-outline-danger {
+            background: rgba(15, 23, 42, 0.88);
+        }
+
+        body.theme-dark .form-control::placeholder,
+        body.theme-dark .form-select::placeholder {
+            color: var(--muted);
+        }
+
+        body.theme-dark .modal-header,
+        body.theme-dark .modal-footer {
+            border-color: var(--panel-border);
+            background: rgba(15, 23, 42, 0.92);
+        }
+
+        body.theme-dark .top-nav-link:hover {
+            color: var(--ink);
+            background: rgba(148, 163, 184, 0.08);
+        }
+
+        body.theme-dark .top-nav-link.active {
+            background: linear-gradient(135deg, var(--brand), var(--accent));
+            color: #06212a;
+        }
+
+        body.theme-dark .section-chip {
+            background: rgba(15, 23, 42, 0.85);
+            color: var(--ink);
+        }
+
+        body.theme-dark .table thead {
+            background: rgba(30, 41, 59, 0.9);
+        }
+
+        body.theme-dark .table tbody tr {
+            color: var(--ink);
+        }
+
+        body.theme-dark .table tbody tr:hover {
+            background: rgba(96, 165, 250, 0.08);
+        }
+
+        body.theme-dark .filter-panel .form-control,
+        body.theme-dark .filter-panel .form-select,
+        body.theme-dark .detail-item {
+            background: rgba(15, 23, 42, 0.78);
+            color: var(--ink);
+            border-color: var(--panel-border);
+        }
+
+        body.theme-dark .detail-value,
+        body.theme-dark .table td,
+        body.theme-dark .table th,
+        body.theme-dark .widget-card.widget-light,
+        body.theme-dark .widget-card .widget-label {
+            color: var(--ink);
+        }
+
+        body.theme-dark .notify-banner {
+            background: rgba(13, 148, 136, 0.12);
+            border-color: rgba(45, 212, 191, 0.25);
+        }
+
+        body.theme-dark .notify-banner-text,
+        body.theme-dark .notify-banner-title {
+            color: var(--ink);
+        }
+
+        body.theme-dark .theme-toggle {
+            background: rgba(148, 163, 184, 0.18);
+            box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.22);
+        }
+
+        .theme-toggle {
+            position: relative;
+            width: 64px;
+            height: 34px;
+            border: 0;
+            border-radius: 999px;
+            background: rgba(148, 163, 184, 0.25);
+            box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.25);
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .theme-toggle .toggle-track {
+            position: relative;
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        .theme-toggle .toggle-thumb {
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 16px rgba(15, 23, 42, 0.14);
+            transition: transform 0.35s ease;
+        }
+
+        body.theme-dark .theme-toggle .toggle-thumb {
+            transform: translateX(30px);
+        }
+
+        .theme-toggle .sun-icon,
+        .theme-toggle .moon-icon {
+            position: absolute;
+            font-size: 0.8rem;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .theme-toggle .sun-icon {
+            opacity: 1;
+            transform: rotate(0deg);
+            color: #f59e0b;
+        }
+
+        .theme-toggle .moon-icon {
+            opacity: 0;
+            transform: rotate(-90deg);
+            color: #cbd5e1;
+        }
+
+        body.theme-dark .theme-toggle .sun-icon {
+            opacity: 0;
+            transform: rotate(90deg);
+        }
+
+        body.theme-dark .theme-toggle .moon-icon {
+            opacity: 1;
+            transform: rotate(0deg);
         }
     </style>
 </head>
@@ -614,22 +1065,30 @@
                 </div>
                 <div class="d-flex flex-wrap align-items-center gap-2">
                     <nav class="top-nav-links">
-                        <a href="{{ route('dashboard') }}" class="top-nav-link active">📊 Dashboard</a>
-                        <a href="{{ route('reasignaciones.index') }}" class="top-nav-link">🔁 Reasignaciones</a>
+                        <a href="{{ route('dashboard') }}" class="top-nav-link active"><i class="bi bi-speedometer2"></i> Dashboard</a>
+                        <a href="{{ route('reasignaciones.index') }}" class="top-nav-link"><i class="bi bi-arrow-repeat"></i> Reasignaciones</a>
                         @if (auth()->user()?->isSuperAdmin())
-                            <a href="{{ route('usuarios.index') }}" class="top-nav-link">🔐 Accesos</a>
+                            <a href="{{ route('usuarios.index') }}" class="top-nav-link"><i class="bi bi-shield-lock"></i> Accesos</a>
                         @endif
                     </nav>
+                    <button type="button" class="theme-toggle" id="themeToggle" aria-label="Cambiar tema" aria-pressed="false">
+                        <span class="toggle-track">
+                            <span class="toggle-thumb">
+                                <i class="bi bi-sun-fill sun-icon"></i>
+                                <i class="bi bi-moon-fill moon-icon"></i>
+                            </span>
+                        </span>
+                    </button>
                     <button
                         type="button"
                         class="btn btn-outline-primary btn-sm"
                         data-bs-toggle="modal"
                         data-bs-target="#notificationEmailsModal">
-                        ✉ Correos de notificación ({{ $notificationEmails->count() }})
+                        <i class="bi bi-envelope"></i> Correos de notificación ({{ $notificationEmails->count() }})
                     </button>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
-                        <button type="submit" class="btn btn-outline-danger btn-sm">⏻ Cerrar sesión</button>
+                        <button type="submit" class="btn btn-outline-danger btn-sm"><i class="bi bi-power"></i> Cerrar sesión</button>
                     </form>
                 </div>
             </div>
@@ -648,8 +1107,12 @@
                                 <div class="value">{{ $totalEquipos }}</div>
                             </div>
                             <div class="hero-kpi">
-                                <div class="label">Valor inventario</div>
+                                <div class="label">Valor total</div>
                                 <div class="value">$ {{ number_format($valorTotal, 0, ',', '.') }}</div>
+                            </div>
+                            <div class="hero-kpi">
+                                <div class="label">Valor actual</div>
+                                <div class="value">$ {{ number_format($valorActual, 0, ',', '.') }}</div>
                             </div>
                             <div class="hero-kpi">
                                 <div class="label">Última carga</div>
@@ -666,133 +1129,27 @@
             </div>
         </div>
 
-        <div class="row g-3 mb-4">
-            <div class="col-6 col-lg-3">
-                <div class="card stat-card stat-total shadow-sm h-100">
-                    <div class="card-body">
-                        <div class="metric-label">Total equipos</div>
-                        <div class="metric-value mb-1">{{ $totalEquipos }}</div>
-                        <div class="metric-footnote">Registros cargados en la base</div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-6 col-lg-3">
-                <div class="card stat-card stat-ok shadow-sm h-100">
-                    <div class="card-body">
-                        <div class="metric-label">Excelente</div>
-                        <div class="metric-value mb-1">{{ $excelentes }}</div>
-                        <div class="metric-footnote">Estado óptimo</div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-6 col-lg-3">
-                <div class="card stat-card stat-good shadow-sm h-100">
-                    <div class="card-body">
-                        <div class="metric-label">Bueno</div>
-                        <div class="metric-value mb-1">{{ $buenos }}</div>
-                        <div class="metric-footnote">Operativo</div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-6 col-lg-3">
-                <div class="card stat-card stat-review shadow-sm h-100">
-                    <div class="card-body">
-                        <div class="metric-label">Revisión / Baja</div>
-                        <div class="metric-value mb-1">{{ $revision }}</div>
-                        <div class="metric-footnote">Pendiente de evaluación</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="row g-3 mb-4">
-            <div class="col-md-6">
-                <div class="card soft-card h-100">
-                    <div class="card-body p-4">
-                        <div class="section-chip mb-3">Valor total del inventario</div>
-                        <h3 class="fw-bold mb-2">$ {{ number_format($valorTotal, 0, ',', '.') }}</h3>
-                        <div class="text-muted">Suma del costo actual importado desde el archivo.</div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="card soft-card h-100">
-                    <div class="card-body p-4">
-                        <div class="section-chip mb-3">Criterio de tipo</div>
-                        <h3 class="fw-bold mb-2">Computador, Telefono</h3>
-                        <div class="text-muted">Notebook y Desktop se consolidan como Computador para evitar duplicidad de categorías.</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="row g-3 mb-4">
-            <div class="col-md-6 col-xl-4">
-                <div class="card stat-card stat-mini shadow-sm h-100">
-                    <div class="card-body">
-                        <div class="metric-label">Computadores</div>
-                        <div class="metric-value mb-1">{{ $computadores }}</div>
-                        <div class="metric-footnote">Equipos principales</div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6 col-xl-4">
-                <div class="card stat-card stat-mini shadow-sm h-100">
-                    <div class="card-body">
-                        <div class="metric-label">Teléfonos</div>
-                        <div class="metric-value mb-1">{{ $telefonos }}</div>
-                        <div class="metric-footnote">Inventario móvil</div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-12 col-xl-4">
-                <div class="card chart-card h-100">
-                    <div class="card-body">
-                        <div class="section-chip mb-3">Distribución por tipo</div>
-                        <div style="height: 170px;">
-                            <canvas id="tiposChart"></canvas>
+        <div class="card soft-card rounded-4 mb-4">
+            <div class="card-body p-4">
+                <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-2 mb-3">
+                    <div>
+                        <div class="section-chip mb-2"><i class="bi bi-grid-1x2"></i> Panel personalizable</div>
+                        <h5 class="fw-bold mb-1">Métricas del inventario</h5>
+                        <div class="subtle-label">
+                            Arrastra, redimensiona o quita paneles a tu gusto. Los ajustes se guardan en este navegador.
+                            <span id="metricsUpdatedAt" class="fw-semibold text-nowrap"></span>
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="row g-3 mb-4">
-            <div class="col-lg-4">
-                <div class="card soft-card h-100">
-                    <div class="card-body p-4">
-                        <div class="subtle-label mb-1">Resumen operativo</div>
-                        <h3 class="fw-bold mb-2">Inventario consolidado</h3>
-                        <div class="text-muted">Toda la información del equipo se puede abrir desde el botón <strong>Ver detalle</strong> en cada fila.</div>
+                    <div class="d-flex flex-wrap gap-2">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" id="resetWidgetsButton">
+                            <i class="bi bi-arrow-counterclockwise"></i> Restablecer panel
+                        </button>
+                        <button type="button" class="btn btn-primary btn-sm" id="openWidgetCatalogButton" data-bs-toggle="modal" data-bs-target="#widgetCatalogModal">
+                            <i class="bi bi-plus-lg"></i> Agregar métrica
+                        </button>
                     </div>
                 </div>
-            </div>
-            <div class="col-lg-4">
-                <div class="card soft-card h-100">
-                    <div class="card-body p-4">
-                        <div class="subtle-label mb-1">Promedio de valor</div>
-                        <h3 class="fw-bold mb-2">
-                            $ {{ $totalEquipos > 0 ? number_format($valorTotal / $totalEquipos, 0, ',', '.') : '0' }}
-                        </h3>
-                        <div class="text-muted">Referencia rápida del costo medio por registro.</div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-4">
-                <div class="card soft-card h-100">
-                    <div class="card-body p-4">
-                        <div class="subtle-label mb-1">Cobertura de estado</div>
-                        <div class="progress" style="height: 10px;">
-                            <div class="progress-bar bg-success" style="width: {{ $totalEquipos > 0 ? round(($excelentes / $totalEquipos) * 100) : 0 }}%"></div>
-                            <div class="progress-bar bg-info" style="width: {{ $totalEquipos > 0 ? round(($buenos / $totalEquipos) * 100) : 0 }}%"></div>
-                            <div class="progress-bar bg-warning" style="width: {{ $totalEquipos > 0 ? round(($revision / $totalEquipos) * 100) : 0 }}%"></div>
-                        </div>
-                        <div class="d-flex justify-content-between mt-2 small text-muted">
-                            <span>Excelente / Bueno / Revisión</span>
-                            <span>{{ $totalEquipos }} total</span>
-                        </div>
-                    </div>
-                </div>
+                <div class="grid-stack" id="metricsGrid"></div>
             </div>
         </div>
 
@@ -843,8 +1200,28 @@
                         <h5 class="fw-bold mb-1">Listado de equipos</h5>
                         <div class="subtle-label">Ordenado por nombre asignado</div>
                     </div>
-                    <div class="d-flex align-items-center gap-2">
+                    <div class="d-flex flex-wrap align-items-center justify-content-end gap-2">
+                        <form method="GET" action="{{ url()->current() }}" class="sort-toolbar">
+                            <input type="hidden" name="search" value="{{ $search }}">
+                            <input type="hidden" name="estado" value="{{ $estadoSeleccionado }}">
+                            <input type="hidden" name="tipo" value="{{ $tipoSeleccionado }}">
+                            <span class="sort-toolbar-icon" aria-hidden="true"><i class="bi bi-sort-down-alt"></i></span>
+                            <label for="ordenarPor" class="sort-toolbar-label">Ordenar por</label>
+                            <select name="ordenar_por" id="ordenarPor" class="sort-toolbar-select" aria-label="Ordenar listado por">
+                                <option value="ubicacion" @selected($ordenarPor === 'ubicacion')>Ubicación</option>
+                                <option value="estado" @selected($ordenarPor === 'estado')>Estado</option>
+                                <option value="codigo" @selected($ordenarPor === 'codigo')>Código</option>
+                            </select>
+                            <select name="orden_direccion" class="sort-toolbar-select sort-direction-select" aria-label="Dirección del orden">
+                                <option value="asc" @selected($ordenDireccion === 'asc')>A-Z</option>
+                                <option value="desc" @selected($ordenDireccion === 'desc')>Z-A</option>
+                            </select>
+                            <button type="submit" class="sort-toolbar-submit" title="Aplicar ordenamiento" aria-label="Aplicar ordenamiento"><i class="bi bi-arrow-right"></i></button>
+                        </form>
                         <div class="subtle-label">{{ $equipos->count() }} registros visibles</div>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" id="openExportModalButton" data-bs-toggle="modal" data-bs-target="#exportEquiposModal">
+                            <i class="bi bi-file-earmark-spreadsheet"></i> Exportar a Excel
+                        </button>
                         @if (auth()->user()?->puedeCrear())
                             <button type="button" class="btn btn-primary btn-sm" id="newEquipoButton">Nuevo equipo</button>
                         @endif
@@ -879,15 +1256,18 @@
                                         'tipo' => $equipo->tipo,
                                         'marca' => $equipo->marca,
                                         'modelo' => $equipo->modelo,
-                                        'serie' => $equipo->numero_serie,
+                                        'numero_serie' => $equipo->numero_serie,
                                         'usuario_pc' => $equipo->usuario_pc,
                                         'procesador' => $equipo->procesador,
-                                        'disco' => $equipo->tipo_disco_duro,
-                                        'ram' => $equipo->ram_instalada,
+                                        'tipo_disco_duro' => $equipo->tipo_disco_duro,
+                                        'ram_instalada' => $equipo->ram_instalada,
                                         'pantalla_externa' => $equipo->pantalla_externa,
                                         'marca_monitor' => $equipo->marca_monitor,
                                         'modelo_monitor' => $equipo->modelo_monitor,
-                                        'serie_monitor' => $equipo->numero_serie_monitor,
+                                        'numero_serie_monitor' => $equipo->numero_serie_monitor,
+                                        'marca_monitor2' => $equipo->marca_monitor2,
+                                        'modelo_monitor2' => $equipo->modelo_monitor2,
+                                        'numero_serie_monitor2' => $equipo->numero_serie_monitor2,
                                         'teclado' => $equipo->teclado,
                                         'mouse' => $equipo->mouse,
                                         'base_notebook' => $equipo->base_notebook,
@@ -1030,11 +1410,11 @@
                         @csrf
                         <div class="col-md-6">
                             <label class="form-label">Correo electrónico</label>
-                            <input type="email" name="email" class="form-control" placeholder="nombre@dominio.com" required>
+                            <input type="email" name="email" id="notificationEmailInput" class="form-control" placeholder="nombre@dominio.com" required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Descripción (opcional)</label>
-                            <input type="text" name="descripcion" class="form-control" placeholder="Ej: Jefe de TI, Soporte, etc.">
+                            <input type="text" name="descripcion" id="notificationEmailDescriptionInput" class="form-control" placeholder="Ej: Jefe de TI, Soporte, etc.">
                         </div>
                         <div class="col-12">
                             <button type="submit" class="btn btn-primary">Agregar correo</button>
@@ -1065,7 +1445,8 @@
                         <div class="detail-item"><div class="detail-label">Nº Serie</div><div class="detail-value" id="detailSerie">—</div></div>
                         <div class="detail-item"><div class="detail-label">Usuario PC</div><div class="detail-value" id="detailUsuarioPc">—</div></div>
                         <div class="detail-item"><div class="detail-label">Procesador</div><div class="detail-value" id="detailProcesador">—</div></div>
-                        <div class="detail-item"><div class="detail-label">Disco / RAM</div><div class="detail-value" id="detailDiscoRam">—</div></div>
+                        <div class="detail-item"><div class="detail-label">Disco</div><div class="detail-value" id="detailDisco">—</div></div>
+                        <div class="detail-item"><div class="detail-label">RAM</div><div class="detail-value" id="detailRam">—</div></div>
                         <div class="detail-item"><div class="detail-label">Pantalla externa</div><div class="detail-value" id="detailPantallaExterna">—</div></div>
                         <div class="detail-item"><div class="detail-label">Monitor</div><div class="detail-value" id="detailMonitor">—</div></div>
                         <div class="detail-item"><div class="detail-label">Periféricos</div><div class="detail-value" id="detailPerifericos">—</div></div>
@@ -1109,7 +1490,7 @@
                         <div class="row g-3">
                             <div class="col-12">
                                 <div class="notify-banner d-flex align-items-start gap-2">
-                                    <span class="notify-banner-icon">✉</span>
+                                    <span class="notify-banner-icon"><i class="bi bi-envelope"></i></span>
                                     <div class="flex-grow-1">
                                         <div class="notify-banner-title">Notificación automática por correo</div>
                                         <div class="notify-banner-text mb-2">Selecciona a quién avisar al guardar este equipo:</div>
@@ -1125,15 +1506,8 @@
                                                 <span class="text-muted small">Aún no hay destinatarios configurados. Agrega uno abajo.</span>
                                             @endforelse
                                         </div>
-                                        <button type="button" class="btn btn-sm btn-outline-primary" id="toggleNuevoDestinatario">+ Agregar otro destinatario</button>
-                                        <div class="row g-2 mt-2 d-none" id="nuevoDestinatarioFields">
-                                            <div class="col-md-6">
-                                                <input type="email" class="form-control form-control-sm" name="nuevo_destinatario_email" id="nuevo_destinatario_email" placeholder="nuevo-correo@dominio.com">
-                                            </div>
-                                            <div class="col-md-6">
-                                                <input type="text" class="form-control form-control-sm" name="nuevo_destinatario_descripcion" id="nuevo_destinatario_descripcion" placeholder="Descripción (opcional)">
-                                            </div>
-                                        </div>
+                                        <button type="button" class="btn btn-sm btn-outline-primary" id="openNotificationEmailsModal">+ Agregar otro destinatario</button>
+                                        <div class="form-text mt-2">Para crear un correo nuevo, usa el formulario de correos de notificación.</div>
                                     </div>
                                 </div>
                             </div>
@@ -1151,11 +1525,10 @@
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">Tipo</label>
-                                <select class="form-select" id="tipo" required>
+                                <select class="form-select" name="tipo" id="tipo" required>
                                     <option value="Computador">Computador</option>
                                     <option value="Telefono">Telefono</option>
                                 </select>
-                                <input type="hidden" name="tipo" id="tipo_hidden" value="Computador">
                             </div>
                             <input type="hidden" name="nombre" id="nombre">
                             <div class="col-md-3">
@@ -1246,6 +1619,7 @@
                                 <select class="form-select" name="pantalla_externa" id="pantalla_externa">
                                     <option value="">--</option>
                                     <option value="SI">SI</option>
+                                    <option value="SI2">SI, 2</option>
                                     <option value="NO">NO</option>
                                 </select>
                             </div>
@@ -1255,17 +1629,37 @@
                             <div class="col-12">
                                 <h6 class="fw-bold text-uppercase text-muted small mb-2">Monitor y periféricos</h6>
                             </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Marca monitor</label>
-                                <input type="text" class="form-control" name="marca_monitor" id="marca_monitor">
+                            <div class="col-12">
+                                <div id="monitor1_fields" class="row g-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label">Marca monitor</label>
+                                        <input type="text" class="form-control" name="marca_monitor" id="marca_monitor">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Modelo monitor</label>
+                                        <input type="text" class="form-control" name="modelo_monitor" id="modelo_monitor">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Nº Serie monitor</label>
+                                        <input type="text" class="form-control" name="numero_serie_monitor" id="numero_serie_monitor">
+                                    </div>
+                                </div>
                             </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Modelo monitor</label>
-                                <input type="text" class="form-control" name="modelo_monitor" id="modelo_monitor">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Nº Serie monitor</label>
-                                <input type="text" class="form-control" name="numero_serie_monitor" id="numero_serie_monitor">
+                            <div class="col-12">
+                                <div id="monitor2_fields" class="row g-3 d-none mt-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label">Marca monitor 2</label>
+                                        <input type="text" class="form-control" name="marca_monitor2" id="marca_monitor2">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Modelo monitor 2</label>
+                                        <input type="text" class="form-control" name="modelo_monitor2" id="modelo_monitor2">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Nº Serie monitor 2</label>
+                                        <input type="text" class="form-control" name="numero_serie_monitor2" id="numero_serie_monitor2">
+                                    </div>
+                                </div>
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">Teclado</label>
@@ -1352,8 +1746,157 @@
         </div>
     </div>
 
+    <div class="modal fade" id="widgetCatalogModal" tabindex="-1" aria-labelledby="widgetCatalogModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header border-0 px-4 pt-4 pb-2">
+                    <div>
+                        <div class="subtle-label">Panel personalizable</div>
+                        <h5 class="modal-title fw-bold" id="widgetCatalogModalLabel">Agregar métrica / gráfico</h5>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body px-4 pb-4">
+                    <p class="subtle-label">Selecciona los paneles que quieres ver en tu dashboard. Se guardan automáticamente en este navegador.</p>
+                    <div class="row g-2 align-items-end mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Ver opciones</label>
+                            <select class="form-select" id="widgetCatalogFilter">
+                                <option value="all">Todas</option>
+                                <option value="summary">Resumen</option>
+                                <option value="values">Valores</option>
+                                <option value="status">Estado</option>
+                                <option value="charts">Gráficos</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-text">Filtra los paneles disponibles según lo que quieras ver.</div>
+                        </div>
+                    </div>
+                    <div class="row g-2" id="widgetCatalogList"></div>
+                </div>
+                <div class="modal-footer border-0 px-4 pb-4 pt-0">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="exportEquiposModal" tabindex="-1" aria-labelledby="exportEquiposModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <form id="exportEquiposForm" method="GET" action="{{ route('equipos.export') }}">
+                    <input type="hidden" name="search" value="{{ $search }}">
+                    <input type="hidden" name="estado" value="{{ $estadoSeleccionado }}">
+                    <input type="hidden" name="tipo" value="{{ $tipoSeleccionado }}">
+                    <div class="modal-header border-0 px-4 pt-4 pb-2">
+                        <div>
+                            <div class="subtle-label">Módulo de exportación</div>
+                            <h5 class="modal-title fw-bold" id="exportEquiposModalLabel">Exportar equipos a Excel</h5>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body px-4 pb-4">
+                        <h6 class="fw-bold text-uppercase text-muted small mb-2">Alcance de la exportación</h6>
+                        <div class="d-flex flex-wrap gap-3 mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="scope" id="exportScopeFiltered" value="filtered" checked>
+                                <label class="form-check-label" for="exportScopeFiltered">
+                                    Solo los equipos filtrados en la vista actual ({{ $equipos->count() }})
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="scope" id="exportScopeAll" value="all">
+                                <label class="form-check-label" for="exportScopeAll">Toda la base de datos</label>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Ordenar por</label>
+                                <select class="form-select" name="sort_by" id="exportSortBy">
+                                    @foreach ($exportColumns as $key => $label)
+                                        <option value="{{ $key }}" @selected($key === 'codigo_inventario')>{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Sentido</label>
+                                <select class="form-select" name="sort_dir" id="exportSortDir">
+                                    <option value="asc">Ascendente</option>
+                                    <option value="desc">Descendente</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="fw-bold text-uppercase text-muted small mb-0">Columnas a incluir</h6>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="exportSelectAllColumns" checked>
+                                <label class="form-check-label small" for="exportSelectAllColumns">Seleccionar todo</label>
+                            </div>
+                        </div>
+                        <div class="row g-2" id="exportColumnsList">
+                            @foreach ($exportColumns as $key => $label)
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input
+                                            class="form-check-input export-column-checkbox"
+                                            type="checkbox"
+                                            name="columns[]"
+                                            value="{{ $key }}"
+                                            id="export_col_{{ $key }}"
+                                            @checked(! in_array($key, ['observaciones', 'updated_at', 'created_at'], true))>
+                                        <label class="form-check-label small" for="export_col_{{ $key }}">{{ $label }}</label>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 px-4 pb-4 pt-0">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary" id="exportEquiposSubmitButton">
+                            <i class="bi bi-download"></i> Generar Excel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script>
         const pageLoader = document.getElementById('pageLoader');
+        const themeToggle = document.getElementById('themeToggle');
+        const themeStorageKey = 'inventario-theme';
+
+        const applyTheme = (theme) => {
+            const isDark = theme === 'dark';
+            document.body.classList.toggle('theme-dark', isDark);
+
+            if (themeToggle) {
+                themeToggle.setAttribute('aria-pressed', String(isDark));
+            }
+        };
+
+        try {
+            const savedTheme = localStorage.getItem(themeStorageKey) || 'light';
+            applyTheme(savedTheme);
+        } catch (error) {
+            applyTheme('light');
+        }
+
+        if (themeToggle) {
+            themeToggle.addEventListener('click', () => {
+                const isDark = !document.body.classList.contains('theme-dark');
+                applyTheme(isDark ? 'dark' : 'light');
+
+                try {
+                    localStorage.setItem(themeStorageKey, isDark ? 'dark' : 'light');
+                } catch (error) {
+                    // Ignorar si el navegador bloquea almacenamiento local.
+                }
+            });
+        }
 
         const hidePageLoader = () => {
             if (pageLoader) {
@@ -1374,8 +1917,6 @@
 
         document.body.style.overflow = 'hidden';
 
-        const tiposData = @json($tiposData);
-        const canvas = document.getElementById('tiposChart');
         const detailModal = document.getElementById('equipoDetailModal');
         const formModalElement = document.getElementById('equipoFormModal');
         const equipoForm = document.getElementById('equipoForm');
@@ -1384,7 +1925,6 @@
         const formSubmitButton = document.getElementById('equipoFormSubmitButton');
         const formMethod = document.getElementById('equipoFormMethod');
         const tipoSelect = document.getElementById('tipo');
-        const tipoHidden = document.getElementById('tipo_hidden');
         const codigoInventarioInput = document.getElementById('codigo_inventario');
         const updateBaseUrl = @json(url('/equipos'));
         const generatedCodes = @json($generatedCodes);
@@ -1394,10 +1934,39 @@
         const formFields = [
             'asignado_a', 'estado', 'ubicacion', 'marca', 'modelo',
             'numero_serie', 'usuario_pc', 'procesador', 'tipo_disco_duro', 'ram_instalada', 'pantalla_externa',
-            'marca_monitor', 'modelo_monitor', 'numero_serie_monitor', 'teclado', 'mouse', 'base_notebook',
+            'marca_monitor', 'modelo_monitor', 'numero_serie_monitor',
+            'marca_monitor2', 'modelo_monitor2', 'numero_serie_monitor2',
+            'teclado', 'mouse', 'base_notebook',
             'equipo_reasignado_a', 'onedrive_funcionando', 'respaldo_onedrive', 'mantencion_realizada',
             'valoracion_equipo', 'valoracion_monitor', 'valoracion_equipo_actual', 'observaciones'
         ];
+
+        const pantallaExternaSelect = document.getElementById('pantalla_externa');
+        const monitor1Fields = document.getElementById('monitor1_fields');
+        const monitor2Fields = document.getElementById('monitor2_fields');
+
+        const normalizePantallaExternaValue = (value) => {
+            if (value === null || value === undefined) {
+                return '';
+            }
+
+            const normalized = String(value).trim().toUpperCase().replace(/\s+/g, '').replace(',', '');
+
+            if (normalized === 'SI2') {
+                return 'SI2';
+            }
+
+            return ['SI', 'NO'].includes(normalized) ? normalized : '';
+        };
+
+        const toggleMonitorFields = () => {
+            const value = normalizePantallaExternaValue(pantallaExternaSelect?.value ?? '');
+            monitor1Fields.classList.toggle('d-none', !['SI', 'SI2'].includes(value));
+            monitor2Fields.classList.toggle('d-none', value !== 'SI2');
+        };
+
+        pantallaExternaSelect?.addEventListener('change', toggleMonitorFields);
+
 
         const specFields = ['marca', 'modelo', 'procesador', 'tipo_disco_duro', 'ram_instalada'];
 
@@ -1453,7 +2022,13 @@
         });
 
         const formatValue = (value) => value && String(value).trim() !== '' ? value : '—';
-        const formatBoolean = (value) => value === 'SI' ? 'Sí' : value === 'NO' ? 'No' : '—';
+        const formatBoolean = (value) => {
+            if (value === 'SI' || value === 'SI2') {
+                return value === 'SI2' ? 'Sí, 2' : 'Sí';
+            }
+
+            return value === 'NO' ? 'No' : '—';
+        };
         const formatMoney = (value, rawMoney) => {
             if (rawMoney && String(rawMoney).trim() !== '') {
                 return rawMoney;
@@ -1474,34 +2049,57 @@
 
         const getModal = (element) => bootstrap.Modal.getOrCreateInstance(element);
 
-        const nuevoDestinatarioToggle = document.getElementById('toggleNuevoDestinatario');
-        const nuevoDestinatarioFields = document.getElementById('nuevoDestinatarioFields');
+        const openNotificationEmailsModal = document.getElementById('openNotificationEmailsModal');
+        const notificationEmailsModal = document.getElementById('notificationEmailsModal');
+        let returnToEquipoFormAfterNotification = false;
 
-        if (nuevoDestinatarioToggle && nuevoDestinatarioFields) {
-            nuevoDestinatarioToggle.addEventListener('click', () => {
-                nuevoDestinatarioFields.classList.toggle('d-none');
+        if (openNotificationEmailsModal && notificationEmailsModal) {
+            openNotificationEmailsModal.addEventListener('click', () => {
+                returnToEquipoFormAfterNotification = formModalElement?.classList.contains('show') ?? false;
 
-                if (!nuevoDestinatarioFields.classList.contains('d-none')) {
-                    document.getElementById('nuevo_destinatario_email')?.focus();
+                if (returnToEquipoFormAfterNotification && formModalElement) {
+                    const formModal = getModal(formModalElement);
+
+                    formModalElement.addEventListener('hidden.bs.modal', function openNotificationAfterFormHides() {
+                        formModalElement.removeEventListener('hidden.bs.modal', openNotificationAfterFormHides);
+                        getModal(notificationEmailsModal).show();
+
+                        setTimeout(() => {
+                            document.getElementById('notificationEmailInput')?.focus();
+                        }, 150);
+                    }, { once: true });
+
+                    formModal.hide();
+                    return;
+                }
+
+                getModal(notificationEmailsModal).show();
+
+                setTimeout(() => {
+                    document.getElementById('notificationEmailInput')?.focus();
+                }, 150);
+            });
+        }
+
+        if (notificationEmailsModal) {
+            notificationEmailsModal.addEventListener('hidden.bs.modal', () => {
+                if (returnToEquipoFormAfterNotification && formModalElement) {
+                    returnToEquipoFormAfterNotification = false;
+                    getModal(formModalElement).show();
                 }
             });
         }
 
         @if ($errors->any())
-            const notificationEmailsModal = document.getElementById('notificationEmailsModal');
             if (notificationEmailsModal) {
                 getModal(notificationEmailsModal).show();
             }
         @endif
 
         const syncTipoState = (tipo, allowChange = true) => {
-            if (tipoHidden) {
-                tipoHidden.value = tipo;
-            }
-
             if (tipoSelect) {
                 tipoSelect.value = tipo;
-                tipoSelect.disabled = !allowChange;
+                tipoSelect.disabled = false;
             }
 
             if (codigoInventarioInput) {
@@ -1533,7 +2131,6 @@
             document.getElementById('estado').value = 'Bueno';
             document.getElementById('nombre').value = '';
             specFields.forEach((field) => syncSpecField(field, ''));
-            nuevoDestinatarioFields?.classList.add('d-none');
         };
 
         const fillEquipoForm = (equipo) => {
@@ -1568,6 +2165,8 @@
             if (equipoForm.elements.nombre) {
                 equipoForm.elements.nombre.value = equipo.nombre ?? equipo.asignado_a ?? '';
             }
+
+            toggleMonitorFields();
         };
 
         const openEquipoForm = (equipo = null) => {
@@ -1639,12 +2238,19 @@
                 document.getElementById('detailCategoriaTipo').textContent = `${formatValue(equipo.categoria)} / ${formatValue(equipo.tipo)}`;
                 document.getElementById('detailEstado').textContent = formatValue(equipo.estado);
                 document.getElementById('detailMarcaModelo').textContent = `${formatValue(equipo.marca)} ${formatValue(equipo.modelo)}`;
-                document.getElementById('detailSerie').textContent = formatValue(equipo.serie);
+                document.getElementById('detailSerie').textContent = formatValue(equipo.numero_serie);
                 document.getElementById('detailUsuarioPc').textContent = formatValue(equipo.usuario_pc);
                 document.getElementById('detailProcesador').textContent = formatValue(equipo.procesador);
-                document.getElementById('detailDiscoRam').textContent = `${formatValue(equipo.disco)} / ${formatValue(equipo.ram)}`;
+                document.getElementById('detailDisco').textContent = formatValue(equipo.tipo_disco_duro);
+                document.getElementById('detailRam').textContent = formatValue(equipo.ram_instalada);
                 document.getElementById('detailPantallaExterna').textContent = formatBoolean(equipo.pantalla_externa);
-                document.getElementById('detailMonitor').textContent = [equipo.marca_monitor, equipo.modelo_monitor, equipo.serie_monitor].filter(value => value && String(value).trim() !== '').join(' / ') || '—';
+                const mon1 = [equipo.marca_monitor, equipo.modelo_monitor, equipo.numero_serie_monitor].filter(value => value && String(value).trim() !== '').join(' / ');
+                const mon2 = [equipo.marca_monitor2, equipo.modelo_monitor2, equipo.numero_serie_monitor2].filter(value => value && String(value).trim() !== '').join(' / ');
+                let monitorText = mon1 || '—';
+                if (mon2) {
+                    monitorText += ' | Monitor 2: ' + mon2;
+                }
+                document.getElementById('detailMonitor').textContent = monitorText;
                 document.getElementById('detailPerifericos').textContent = `Teclado: ${formatBoolean(equipo.teclado)} | Mouse: ${formatBoolean(equipo.mouse)} | Base: ${formatBoolean(equipo.base_notebook)}`;
                 document.getElementById('detailOneDrive').textContent = `Funciona: ${formatBoolean(equipo.onedrive_funcionando)} | Respaldo: ${formatBoolean(equipo.respaldo_onedrive)}`;
                 document.getElementById('detailReasignado').textContent = formatValue(equipo.equipo_reasignado_a);
@@ -1668,28 +2274,392 @@
             });
         }
 
-        if (canvas) {
-            new Chart(canvas.getContext('2d'), {
+        // ---- Dashboard din\u00e1mico (Gridstack): cat\u00e1logo de widgets, layout personalizable y m\u00e9tricas en vivo ----
+        const metricsGridEl = document.getElementById('metricsGrid');
+        const dashboardCharts = {};
+        const STORAGE_KEY = @json('pcgeek_dashboard_widgets_v1_' . (auth()->id() ?? 'guest'));
+        const metricsEndpoint = @json(route('equipos.metrics'));
+        const money = (value) => '$ ' + new Intl.NumberFormat('es-CL').format(Math.round(Number(value) || 0));
+
+        let currentMetrics = {
+            total: @json((int) $totalEquipos),
+            excelentes: @json((int) $excelentes),
+            buenos: @json((int) $buenos),
+            revision: @json((int) $revision),
+            computadores: @json((int) $computadores),
+            telefonos: @json((int) $telefonos),
+            valor_total: @json((float) $valorTotal),
+            valor_actual: @json((float) $valorActual),
+            tipos: @json($tiposData),
+            actualizado: @json(now()->format('d/m/Y H:i:s')),
+        };
+
+        const WIDGET_CATALOG = {
+            'total-equipos': { group: 'summary', title: 'Total equipos', description: 'Registros cargados en la base', colorClass: 'stat-total', w: 3, h: 2, value: (d) => d.total, footnote: 'Registros cargados en la base' },
+            'valor-inventario': { group: 'values', title: 'Valor actual', description: 'Suma del costo actual de todos los equipos', colorClass: 'stat-total', w: 3, h: 2, value: (d) => money(d.valor_actual), footnote: 'Costo actual del inventario' },
+            'valor-total': { group: 'values', title: 'Valor total', description: 'Suma del valor de adquisición de todos los equipos', colorClass: 'stat-total', w: 3, h: 2, value: (d) => money(d.valor_total), footnote: 'Valor total de compra' },
+            'excelentes': { group: 'status', title: 'Excelente', description: 'Equipos en estado \u00f3ptimo', colorClass: 'stat-ok', w: 3, h: 2, value: (d) => d.excelentes, footnote: 'Estado \u00f3ptimo' },
+            'buenos': { group: 'status', title: 'Bueno', description: 'Equipos operativos', colorClass: 'stat-good', w: 3, h: 2, value: (d) => d.buenos, footnote: 'Operativo' },
+            'revision': { group: 'status', title: 'Revisi\u00f3n / Baja', description: 'Equipos pendientes de evaluaci\u00f3n', colorClass: 'stat-review', w: 3, h: 2, value: (d) => d.revision, footnote: 'Pendiente de evaluaci\u00f3n' },
+            'computadores': { group: 'summary', title: 'Computadores', description: 'Total de equipos principales', colorClass: 'stat-mini', w: 3, h: 2, value: (d) => d.computadores, footnote: 'Equipos principales' },
+            'telefonos': { group: 'summary', title: 'Tel\u00e9fonos', description: 'Total de inventario m\u00f3vil', colorClass: 'stat-mini', w: 3, h: 2, value: (d) => d.telefonos, footnote: 'Inventario m\u00f3vil' },
+            'promedio-valor': { group: 'values', title: 'Promedio de valor', description: 'Costo medio por registro', colorClass: 'stat-mini', w: 3, h: 2, value: (d) => money(d.total > 0 ? d.valor_actual / d.total : 0), footnote: 'Costo medio por registro' },
+            'distribucion-tipo': { group: 'charts', title: 'Distribuci\u00f3n por tipo', description: 'Gr\u00e1fico de dona por tipo de equipo', type: 'chart', w: 6, h: 3 },
+            'cobertura-estado': { group: 'charts', title: 'Cobertura de estado', description: 'Proporci\u00f3n Excelente / Bueno / Revisi\u00f3n', type: 'progress', w: 6, h: 3 },
+        };
+
+        const DEFAULT_LAYOUT = [
+            { id: 'total-equipos', x: 0, y: 0, w: 3, h: 2 },
+            { id: 'excelentes', x: 3, y: 0, w: 3, h: 2 },
+            { id: 'buenos', x: 6, y: 0, w: 3, h: 2 },
+            { id: 'revision', x: 9, y: 0, w: 3, h: 2 },
+            { id: 'valor-inventario', x: 0, y: 2, w: 3, h: 2 },
+            { id: 'valor-total', x: 3, y: 2, w: 3, h: 2 },
+            { id: 'computadores', x: 6, y: 2, w: 3, h: 2 },
+            { id: 'telefonos', x: 9, y: 2, w: 3, h: 2 },
+            { id: 'distribucion-tipo', x: 0, y: 4, w: 6, h: 3 },
+            { id: 'cobertura-estado', x: 6, y: 4, w: 6, h: 3 },
+        ];
+
+        let dashboardGrid = null;
+
+        const widgetContentHtml = (id) => {
+            const def = WIDGET_CATALOG[id];
+
+            if (!def) {
+                return '';
+            }
+
+            if (def.type === 'chart') {
+                return `
+                    <div class="widget-card widget-light">
+                        <button type="button" class="widget-remove" data-remove="${id}" title="Quitar panel"><i class="bi bi-x-lg"></i></button>
+                        <div class="widget-label mb-2">${def.title}</div>
+                        <div style="flex:1; min-height:0; position:relative;"><canvas></canvas></div>
+                    </div>`;
+            }
+
+            if (def.type === 'progress') {
+                return `
+                    <div class="widget-card widget-light">
+                        <button type="button" class="widget-remove" data-remove="${id}" title="Quitar panel"><i class="bi bi-x-lg"></i></button>
+                        <div class="widget-label mb-2">${def.title}</div>
+                        <div class="progress" style="height:10px;">
+                            <div class="progress-bar bg-success" data-field="bar-excelente" style="width:0%"></div>
+                            <div class="progress-bar bg-info" data-field="bar-bueno" style="width:0%"></div>
+                            <div class="progress-bar bg-warning" data-field="bar-revision" style="width:0%"></div>
+                        </div>
+                        <div class="d-flex justify-content-between mt-2 small text-muted">
+                            <span>Excelente / Bueno / Revisi\u00f3n</span>
+                            <span data-field="total-label">0 total</span>
+                        </div>
+                    </div>`;
+            }
+
+            return `
+                <div class="widget-card ${def.colorClass}">
+                    <button type="button" class="widget-remove" data-remove="${id}" title="Quitar panel"><i class="bi bi-x-lg"></i></button>
+                    <div class="widget-label">${def.title}</div>
+                    <div class="widget-value" data-field="value">\u2014</div>
+                    <div class="widget-footnote">${def.footnote}</div>
+                </div>`;
+        };
+
+        const renderTiposChart = (node) => {
+            const canvasEl = node.querySelector('canvas');
+
+            if (!canvasEl || typeof Chart === 'undefined') {
+                return;
+            }
+
+            const labels = Object.keys(currentMetrics.tipos || {});
+            const data = Object.values(currentMetrics.tipos || {});
+
+            if (dashboardCharts['distribucion-tipo']) {
+                dashboardCharts['distribucion-tipo'].data.labels = labels;
+                dashboardCharts['distribucion-tipo'].data.datasets[0].data = data;
+                dashboardCharts['distribucion-tipo'].update();
+                return;
+            }
+
+            dashboardCharts['distribucion-tipo'] = new Chart(canvasEl.getContext('2d'), {
                 type: 'doughnut',
                 data: {
-                    labels: Object.keys(tiposData),
+                    labels,
                     datasets: [{
-                        data: Object.values(tiposData),
+                        data,
                         backgroundColor: ['#1d4ed8', '#0f766e', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'],
                         borderWidth: 0,
-                    }]
+                    }],
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom'
-                        }
-                    }
-                }
+                    plugins: { legend: { position: 'bottom' } },
+                },
             });
+        };
+
+        const updateWidgetDom = (id) => {
+            const def = WIDGET_CATALOG[id];
+            const node = metricsGridEl?.querySelector(`.grid-stack-item[gs-id="${id}"]`);
+
+            if (!def || !node) {
+                return;
+            }
+
+            if (def.type === 'chart') {
+                renderTiposChart(node);
+                return;
+            }
+
+            if (def.type === 'progress') {
+                const total = currentMetrics.total || 0;
+                const pct = (value) => total > 0 ? Math.round((value / total) * 100) : 0;
+
+                node.querySelector('[data-field="bar-excelente"]').style.width = `${pct(currentMetrics.excelentes)}%`;
+                node.querySelector('[data-field="bar-bueno"]').style.width = `${pct(currentMetrics.buenos)}%`;
+                node.querySelector('[data-field="bar-revision"]').style.width = `${pct(currentMetrics.revision)}%`;
+                node.querySelector('[data-field="total-label"]').textContent = `${total} total`;
+                return;
+            }
+
+            const valueEl = node.querySelector('[data-field="value"]');
+
+            if (valueEl) {
+                valueEl.textContent = def.value(currentMetrics);
+            }
+        };
+
+        const refreshAllWidgets = () => {
+            metricsGridEl?.querySelectorAll('.grid-stack-item[gs-id]').forEach((node) => {
+                updateWidgetDom(node.getAttribute('gs-id'));
+            });
+
+            const updatedAtEl = document.getElementById('metricsUpdatedAt');
+
+            if (updatedAtEl) {
+                updatedAtEl.textContent = `\u00b7 Actualizado ${currentMetrics.actualizado}`;
+            }
+        };
+
+        const loadStoredLayout = () => {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                const parsed = raw ? JSON.parse(raw) : null;
+
+                return (parsed?.layout?.length) ? parsed.layout : null;
+            } catch (error) {
+                return null;
+            }
+        };
+
+        const saveLayout = () => {
+            if (!dashboardGrid) {
+                return;
+            }
+
+            const layout = dashboardGrid.save(false)
+                .filter((item) => item.id)
+                .map((item) => ({ id: item.id, x: item.x, y: item.y, w: item.w, h: item.h }));
+
+            localStorage.setItem(STORAGE_KEY, JSON.stringify({ layout }));
+        };
+
+        const syncCatalogCheckboxes = () => {
+            document.querySelectorAll('.widget-catalog-checkbox').forEach((checkbox) => {
+                const id = checkbox.getAttribute('data-widget-id');
+                checkbox.checked = !!metricsGridEl?.querySelector(`.grid-stack-item[gs-id="${id}"]`);
+            });
+        };
+
+        const addWidgetToGrid = (id, position = {}) => {
+            const def = WIDGET_CATALOG[id];
+
+            if (!def || !dashboardGrid || metricsGridEl?.querySelector(`.grid-stack-item[gs-id="${id}"]`)) {
+                return;
+            }
+
+            dashboardGrid.addWidget({
+                id,
+                x: position.x,
+                y: position.y,
+                w: position.w ?? def.w,
+                h: position.h ?? def.h,
+                autoPosition: position.x === undefined,
+                content: widgetContentHtml(id),
+            });
+
+            updateWidgetDom(id);
+        };
+
+        const removeWidgetFromGrid = (id) => {
+            const node = metricsGridEl?.querySelector(`.grid-stack-item[gs-id="${id}"]`);
+
+            if (!node || !dashboardGrid) {
+                return;
+            }
+
+            if (dashboardCharts[id]) {
+                dashboardCharts[id].destroy();
+                delete dashboardCharts[id];
+            }
+
+            dashboardGrid.removeWidget(node);
+            saveLayout();
+        };
+
+        const populateWidgetCatalogModal = () => {
+            const list = document.getElementById('widgetCatalogList');
+            const filterSelect = document.getElementById('widgetCatalogFilter');
+
+            if (!list) {
+                return;
+            }
+
+            const selectedGroup = filterSelect?.value || 'all';
+            const entries = Object.entries(WIDGET_CATALOG).filter(([, def]) => selectedGroup === 'all' || def.group === selectedGroup);
+
+            list.innerHTML = entries.length ? entries.map(([id, def]) => `
+                <div class="col-md-6">
+                    <label class="widget-catalog-item w-100 mb-0" style="cursor:pointer;">
+                        <input type="checkbox" class="form-check-input mt-1 widget-catalog-checkbox" data-widget-id="${id}">
+                        <span>
+                            <span class="d-block fw-semibold">${def.title}</span>
+                            <span class="d-block small text-muted">${def.description ?? ''}</span>
+                        </span>
+                    </label>
+                </div>
+            `).join('') : `
+                <div class="col-12 text-center text-muted py-3">No hay paneles en esta categoría.</div>
+            `;
+
+            list.querySelectorAll('.widget-catalog-checkbox').forEach((checkbox) => {
+                checkbox.addEventListener('change', function () {
+                    const id = this.getAttribute('data-widget-id');
+
+                    if (this.checked) {
+                        addWidgetToGrid(id);
+                        saveLayout();
+                    } else {
+                        removeWidgetFromGrid(id);
+                    }
+                });
+            });
+
+            syncCatalogCheckboxes();
+
+            if (filterSelect && !filterSelect.dataset.bound) {
+                filterSelect.dataset.bound = '1';
+                filterSelect.addEventListener('change', populateWidgetCatalogModal);
+            }
+        };
+
+        if (metricsGridEl && typeof GridStack !== 'undefined') {
+            dashboardGrid = GridStack.init({
+                column: 12,
+                cellHeight: 90,
+                margin: 8,
+                float: true,
+                animate: true,
+                // En pantallas angostas colapsa a 1 columna, apilando los widgets en orden.
+                columnOpts: {
+                    breakpoints: [
+                        { w: 576, c: 1 },
+                        { w: 992, c: 6 },
+                    ],
+                    layout: 'list',
+                },
+            }, metricsGridEl);
+
+            const storedLayout = loadStoredLayout() || DEFAULT_LAYOUT;
+
+            storedLayout.forEach((item) => {
+                addWidgetToGrid(item.id, item);
+            });
+
+            refreshAllWidgets();
+
+            dashboardGrid.on('change added removed', saveLayout);
+
+            metricsGridEl.addEventListener('click', (event) => {
+                const button = event.target.closest('.widget-remove');
+
+                if (!button) {
+                    return;
+                }
+
+                removeWidgetFromGrid(button.getAttribute('data-remove'));
+                syncCatalogCheckboxes();
+            });
+
+            document.getElementById('widgetCatalogModal')?.addEventListener('show.bs.modal', populateWidgetCatalogModal);
+
+            document.getElementById('resetWidgetsButton')?.addEventListener('click', () => {
+                if (!confirm('\u00bfRestablecer el panel a la disposici\u00f3n predeterminada?')) {
+                    return;
+                }
+
+                localStorage.removeItem(STORAGE_KEY);
+                location.reload();
+            });
+
+            // Actualizaci\u00f3n reactiva: polling optimizado cada 20s respetando los filtros activos.
+            setInterval(() => {
+                const url = new URL(metricsEndpoint, window.location.origin);
+                url.search = window.location.search;
+
+                fetch(url, { headers: { Accept: 'application/json' } })
+                    .then((response) => (response.ok ? response.json() : null))
+                    .then((data) => {
+                        if (!data) {
+                            return;
+                        }
+
+                        currentMetrics = {
+                            total: data.total,
+                            excelentes: data.excelentes,
+                            buenos: data.buenos,
+                            revision: data.revision,
+                            computadores: data.computadores,
+                            telefonos: data.telefonos,
+                            valor_total: data.valor_total,
+                            valor_actual: data.valor_actual,
+                            tipos: data.tipos,
+                            actualizado: data.actualizado,
+                        };
+
+                        refreshAllWidgets();
+                    })
+                    .catch(() => {});
+            }, 20000);
         }
+
+        // ---- Exportaci\u00f3n a Excel: seleccionar todo/nada y validar al menos una columna ----
+        const exportSelectAllColumns = document.getElementById('exportSelectAllColumns');
+        const exportColumnCheckboxes = document.querySelectorAll('.export-column-checkbox');
+        const exportForm = document.getElementById('exportEquiposForm');
+
+        exportSelectAllColumns?.addEventListener('change', function () {
+            exportColumnCheckboxes.forEach((checkbox) => {
+                checkbox.checked = this.checked;
+            });
+        });
+
+        exportColumnCheckboxes.forEach((checkbox) => {
+            checkbox.addEventListener('change', () => {
+                exportSelectAllColumns.checked = Array.from(exportColumnCheckboxes).every((c) => c.checked);
+            });
+        });
+
+        exportForm?.addEventListener('submit', (event) => {
+            const anyChecked = Array.from(exportColumnCheckboxes).some((checkbox) => checkbox.checked);
+
+            if (!anyChecked) {
+                event.preventDefault();
+                alert('Selecciona al menos una columna para exportar.');
+            }
+        });
     </script>
 </body>
 </html>

@@ -17,6 +17,8 @@ Route::get('/dashboard', [EquipoController::class, 'index'])
 
 Route::middleware('auth')->group(function () {
     Route::get('/reasignaciones', [ReasignacionController::class, 'index'])->name('reasignaciones.index');
+    Route::get('/equipos/metrics', [EquipoController::class, 'metrics'])->name('equipos.metrics');
+    Route::get('/equipos/export', [EquipoController::class, 'export'])->name('equipos.export');
     Route::post('/equipos', [EquipoController::class, 'store'])->name('equipos.store');
     Route::put('/equipos/{equipo}', [EquipoController::class, 'update'])->name('equipos.update');
     Route::delete('/equipos/{equipo}', [EquipoController::class, 'destroy'])->name('equipos.destroy');

@@ -22,7 +22,10 @@ return new class extends Migration
             $table->string('marca_monitor')->nullable()->after('pantalla_externa');
             $table->string('modelo_monitor')->nullable()->after('marca_monitor');
             $table->string('numero_serie_monitor')->nullable()->after('modelo_monitor');
-            $table->string('teclado')->nullable()->after('numero_serie_monitor');
+            $table->string('marca_monitor2')->nullable()->after('numero_serie_monitor');
+            $table->string('modelo_monitor2')->nullable()->after('marca_monitor2');
+            $table->string('numero_serie_monitor2')->nullable()->after('modelo_monitor2');
+            $table->string('teclado')->nullable()->after('numero_serie_monitor2');
             $table->string('mouse')->nullable()->after('teclado');
             $table->string('base_notebook')->nullable()->after('mouse');
             $table->string('onedrive_funcionando')->nullable()->after('base_notebook');
@@ -52,6 +55,9 @@ return new class extends Migration
                 'marca_monitor',
                 'modelo_monitor',
                 'numero_serie_monitor',
+                'marca_monitor2',
+                'modelo_monitor2',
+                'numero_serie_monitor2',
                 'teclado',
                 'mouse',
                 'base_notebook',
